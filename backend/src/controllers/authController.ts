@@ -24,7 +24,7 @@ export async function authCallback(req: Request, res: Response, next: NextFuncti
 
         if (!clerkId) {
             return res
-                .status(200)
+                .status(401)
                 .json({ message: "Unauthorized Request" })
         }
 
@@ -35,7 +35,7 @@ export async function authCallback(req: Request, res: Response, next: NextFuncti
             user = await User.create({
                 clerkId,
                 name: clerkUser.firstName ? `${clerkUser.firstName} ${clerkUser.lastName}`.trim() :
-                    clerkUser.emailAddresses[0]?.emailAddress.split('@')[0],
+                    clerkUser.emailAddresses[0]?.emailAddress?.split('@')[0],
                 email: clerkUser.emailAddresses[0]?.emailAddress,
                 avatar: clerkUser.imageUrl
             })
