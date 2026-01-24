@@ -31,10 +31,8 @@ const protectRoute = [
             next()
 
         } catch (error) {
-            console.log("Error in Protect Route", error)
-            return res
-                .status(500)
-                .json({ message: "Internal Server Error " })
+            res.status(500)
+            next(error)
         }
     }
 ]
