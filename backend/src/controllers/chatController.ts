@@ -1,6 +1,7 @@
 import type { NextFunction, Response } from "express";
 import type { AuthRequest } from "../middlewares/auth";
 import Chat from "../models/Chat";
+import { Types } from "mongoose";
 
 export async function getChats(req: AuthRequest, res: Response, next: NextFunction) {
     try {
@@ -34,7 +35,25 @@ export async function getChats(req: AuthRequest, res: Response, next: NextFuncti
 export async function getOrCreateChat(req: AuthRequest, res: Response, next: NextFunction) {
     try {
         const userId = req.userId
-        const { participantId } = req.params
+        const { participantId }: { participantId?: string } = req.params
+
+        if (!participantId) {
+            return res
+                .status(400)
+                .json({ message: "ParticipantId is required" })
+        }
+
+        if (!Types.ObjectId.isValid(participantId)) {
+            return res
+                .status(400)
+                .json({ message: "Invalid ParticipantId" })
+        }
+
+        if (userId === participantId) {
+            return res
+                .status(400)
+                .json({ message: "Cannot create chat with yourself " })
+        }
 
         let chat = await Chat.findOne({ participants: { $all: [userId, participantId] } })
             .populate("participants", "name email avatar")
@@ -46,7 +65,7 @@ export async function getOrCreateChat(req: AuthRequest, res: Response, next: Nex
             chat = await chat.populate("participants", "name email avatar")
         }
 
-        const otherParticipant = chat.participants.filter(p => p._id.toString() !== userId)
+        const otherParticipant = chat.participants.find(p => p._id.toString() !== userId)
 
         return res
             .status(200)
